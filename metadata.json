@@ -1,0 +1,8 @@
+{
+  "name": "Class 9 STEM Study Tracker",
+  "description": "Comprehensive Class 9 syllabus tracker, study timer, markdown note-taker, and consistency calendar for Physics, Chemistry, and Mathematics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
