@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Flame, Award, BookCheck, Clock, TrendingUp, Calendar, ChevronRight, RotateCcw, FileCheck } from 'lucide-react';
+import { Play, Flame, Award, BookCheck, Clock, TrendingUp, Calendar, ChevronRight, RotateCcw, FileCheck, Sparkles } from 'lucide-react';
 import { Chapter, StudyGoal, StudySession, SubjectId, Topic } from '../types';
 import { SUBJECT_METAS } from '../data/curriculum';
 import { calculateStreaks } from '../utils/storage';
@@ -101,6 +101,41 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-8 pb-12">
+      {/* Featured Large Website Thumbnail Banner */}
+      <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-slate-900 group">
+        <img
+          src="/images/og-thumbnail.jpg"
+          alt="Study with Auzzie - Class 9 STEM Companion (Physics, Chemistry, Mathematics)"
+          className="w-full h-44 sm:h-56 md:h-64 object-cover object-center group-hover:scale-[1.01] transition-transform duration-700"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/10" />
+        <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3 text-white">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/30 backdrop-blur-md border border-indigo-400/30 text-[11px] font-semibold text-indigo-200 mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
+              <span>NCERT 2026 Academic Edition · Class 9 STEM</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white drop-shadow-sm">
+              Study with Auzzie
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-200 mt-1 max-w-xl line-clamp-2 leading-relaxed">
+              Complete STEM tracker for Class 9: Physics, Chemistry & Mathematics with targeted timers, formula sheets & AI doubt resolution.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNavigateToSyllabus()}
+              className="px-4 py-2 text-xs font-bold bg-white hover:bg-slate-100 text-slate-900 rounded-xl shadow-xs transition-colors cursor-pointer whitespace-nowrap"
+            >
+              Explore Curriculum
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Editorial Header Banner */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
@@ -246,27 +281,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           {subjectStats.map((item) => (
             <div
               key={item.id}
-              className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between"
+              className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group"
             >
               {/* High-fidelity Subject Illustration Asset */}
-              <div className="relative h-36 w-full bg-slate-900 overflow-hidden">
+              <div className="relative h-44 w-full bg-slate-950 overflow-hidden">
                 <img
                   src={item.meta.heroImage}
                   alt={`${item.meta.name} Class 9 Curriculum visual`}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover opacity-85 group-hover:scale-105 transition-transform duration-500"
+                  loading="eager"
+                  className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-700"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent" />
-                <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white tracking-tight">
-                      {item.meta.name}
-                    </h3>
-                    <p className="text-xs text-slate-200 line-clamp-1">{item.meta.tagline}</p>
-                  </div>
-                  <span className="font-mono tabular-nums text-xs font-bold text-white bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-md">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-slate-950/10" />
+                <div className="absolute top-3 right-3">
+                  <span className="font-mono tabular-nums text-xs font-bold text-white bg-slate-900/60 backdrop-blur-md border border-white/20 px-2.5 py-1 rounded-full shadow-xs">
                     {item.percentage}%
                   </span>
+                </div>
+                <div className="absolute bottom-3.5 left-4 right-4">
+                  <h3 className="text-xl font-extrabold text-white tracking-tight drop-shadow-xs">
+                    {item.meta.name}
+                  </h3>
+                  <p className="text-xs text-slate-200 line-clamp-1 mt-0.5">{item.meta.tagline}</p>
                 </div>
               </div>
 
@@ -274,9 +312,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="p-5 flex-1 flex flex-col justify-between">
                 <div>
                   {/* Progress Bar */}
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-4">
+                  <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-4 p-0.5 border border-slate-200/50">
                     <div
-                      className="h-2 rounded-full transition-all duration-500"
+                      className="h-full rounded-full transition-all duration-700 shadow-xs"
                       style={{
                         width: `${item.percentage}%`,
                         backgroundColor: item.meta.color,
@@ -285,17 +323,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
 
                   {/* Clean unboxed metadata with dot separators */}
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-4 font-mono tabular-nums">
-                    <span>{item.mastered} Mastered</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{item.inProgress} In Progress</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{item.total - item.mastered - item.inProgress} Unstudied</span>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mb-3 font-mono tabular-nums">
+                    <span className="font-semibold text-slate-700">{item.mastered} Mastered</span>
+                    <span aria-hidden="true" className="text-slate-300">·</span>
+                    <span className="font-semibold text-slate-700">{item.inProgress} In Progress</span>
+                    <span aria-hidden="true" className="text-slate-300">·</span>
+                    <span className="font-semibold text-slate-500">{item.total - item.mastered - item.inProgress} Unstudied</span>
                   </div>
 
-                  <div className="text-xs text-slate-600 mb-4 flex items-center justify-between">
+                  <div className="text-xs text-slate-600 mb-4 flex items-center justify-between px-0.5">
                     <span>Total Time Logged:</span>
-                    <span className="font-mono font-semibold text-slate-900 tabular-nums">
+                    <span className="font-mono font-bold text-slate-900 tabular-nums">
                       {item.hours} hours
                     </span>
                   </div>
@@ -304,7 +342,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
                   <button
                     onClick={() => onNavigateToSyllabus(item.id)}
-                    className="flex-1 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                    className="flex-1 py-2 px-3 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition-all cursor-pointer text-center"
                   >
                     Open Syllabus
                   </button>
@@ -316,7 +354,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         ) || allTopics.find((t) => t.subjectId === item.id);
                       if (firstActive) onLaunchTimerForTopic(firstActive);
                     }}
-                    className="px-3 py-2 text-xs font-semibold text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2 text-xs font-bold text-white rounded-xl shadow-xs hover:opacity-95 transition-all cursor-pointer flex items-center gap-1.5 active:scale-98"
                     style={{ backgroundColor: item.meta.color }}
                   >
                     <Play className="w-3.5 h-3.5 fill-white" />

@@ -92,6 +92,22 @@ export const AuthGate: React.FC = () => {
             <span>Class 9 STEM (NCERT 2026)</span>
           </div>
 
+          {/* Large Website Thumbnail Banner */}
+          <div className="relative w-full rounded-2xl overflow-hidden shadow-sm border border-slate-200 bg-slate-900">
+            <img
+              src="/images/og-thumbnail.jpg"
+              alt="Study with Auzzie - Class 9 STEM Companion"
+              className="w-full h-44 object-cover object-center"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent" />
+            <div className="absolute bottom-3 left-3.5 right-3.5 text-white">
+              <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">Class 9 STEM Companion</span>
+            </div>
+          </div>
+
           <div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
               Study with <span className="text-indigo-600">Auzzie</span>

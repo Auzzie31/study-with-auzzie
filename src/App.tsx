@@ -206,7 +206,6 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenFormulas={() => setIsFormulaModalOpen(true)}
-        onResetAllToZero={handleResetAll}
         onOpenAuth={handleOpenAuth}
         activeTimerRunning={isTimerRunning}
         timerSecondsRemaining={timerSecondsRemaining}

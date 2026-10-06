@@ -9,7 +9,7 @@ export const SUBJECT_METAS: Record<string, SubjectMeta> = {
     accentBg: 'bg-sky-50',
     borderColor: 'border-sky-200',
     iconName: 'Zap',
-    heroImage: '/src/assets/images/subject_physics_hero_1790948746756.jpg',
+    heroImage: '/images/physics.jpg',
   },
   chemistry: {
     id: 'chemistry',
@@ -19,7 +19,7 @@ export const SUBJECT_METAS: Record<string, SubjectMeta> = {
     accentBg: 'bg-emerald-50',
     borderColor: 'border-emerald-200',
     iconName: 'FlaskConical',
-    heroImage: '/src/assets/images/subject_chemistry_hero_1790948759921.jpg',
+    heroImage: '/images/chemistry.jpg',
   },
   mathematics: {
     id: 'mathematics',
@@ -29,7 +29,7 @@ export const SUBJECT_METAS: Record<string, SubjectMeta> = {
     accentBg: 'bg-indigo-50',
     borderColor: 'border-indigo-200',
     iconName: 'Sigma',
-    heroImage: '/src/assets/images/subject_math_hero_1790948772448.jpg',
+    heroImage: '/images/math.jpg',
   },
 };
 
