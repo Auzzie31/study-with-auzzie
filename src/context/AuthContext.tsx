@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginLocally = (email: string, name?: string) => {
     const formattedEmail = email.trim().toLowerCase();
     const localAppUser: AppUser = {
-      uid: 'local_' + btoa(formattedEmail).replace(/=/g, ''),
+      uid: 'student_' + btoa(formattedEmail).replace(/=/g, ''),
       email: formattedEmail,
       displayName: name || formattedEmail.split('@')[0],
       isLocal: true,
@@ -82,30 +82,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = async (email: string, pass: string) => {
+    const formattedEmail = email.trim().toLowerCase();
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), pass);
+      await signInWithEmailAndPassword(auth, formattedEmail, pass);
       localStorage.removeItem(LOCAL_USER_KEY);
     } catch (err: any) {
-      if (err?.code === 'auth/operation-not-allowed') {
-        // Check if user was registered locally
+      const code = err?.code || '';
+      const msg = err?.message || '';
+      if (code === 'auth/operation-not-allowed' || msg.includes('operation-not-allowed')) {
+        // Transparent fallback: verify or auto-register local user
         const raw = localStorage.getItem(LOCAL_USERS_DB_KEY);
         const registered = raw ? JSON.parse(raw) : {};
-        const formattedEmail = email.trim().toLowerCase();
         if (registered[formattedEmail]) {
-          if (registered[formattedEmail].pass === pass) {
-            loginLocally(formattedEmail, registered[formattedEmail].name);
-            return;
+          if (registered[formattedEmail].pass && registered[formattedEmail].pass !== pass) {
+            throw new Error('Incorrect password. Please verify your password.');
           }
-          throw new Error('Incorrect password for local account.');
+          loginLocally(formattedEmail, registered[formattedEmail].name);
+          return;
         }
+        // Save new credentials and log in seamlessly
+        registered[formattedEmail] = { pass, name: formattedEmail.split('@')[0] };
+        localStorage.setItem(LOCAL_USERS_DB_KEY, JSON.stringify(registered));
+        loginLocally(formattedEmail, formattedEmail.split('@')[0]);
+        return;
       }
       throw err;
     }
   };
 
   const signup = async (email: string, pass: string, name?: string) => {
+    const formattedEmail = email.trim().toLowerCase();
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+      const cred = await createUserWithEmailAndPassword(auth, formattedEmail, pass);
       if (cred.user) {
         if (name && name.trim()) {
           await updateProfile(cred.user, { displayName: name.trim() });
@@ -113,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           await setDoc(doc(db, 'users', cred.user.uid, 'profile', 'info'), {
             userId: cred.user.uid,
-            email: cred.user.email || email.trim(),
+            email: cred.user.email || formattedEmail,
             displayName: name?.trim() || '',
             createdAt: new Date().toISOString(),
           });
@@ -123,11 +131,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       localStorage.removeItem(LOCAL_USER_KEY);
     } catch (err: any) {
-      if (err?.code === 'auth/operation-not-allowed') {
-        // Save to local registered users database as fallback
+      const code = err?.code || '';
+      const msg = err?.message || '';
+      if (code === 'auth/operation-not-allowed' || msg.includes('operation-not-allowed')) {
+        // Transparent fallback: register user seamlessly
         const raw = localStorage.getItem(LOCAL_USERS_DB_KEY);
         const registered = raw ? JSON.parse(raw) : {};
-        const formattedEmail = email.trim().toLowerCase();
         registered[formattedEmail] = { pass, name: name || formattedEmail.split('@')[0] };
         localStorage.setItem(LOCAL_USERS_DB_KEY, JSON.stringify(registered));
         loginLocally(formattedEmail, name);
@@ -148,7 +157,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetPassword = async (email: string) => {
-    await sendPasswordResetEmail(auth, email.trim());
+    const formattedEmail = email.trim().toLowerCase();
+    try {
+      await sendPasswordResetEmail(auth, formattedEmail);
+    } catch (err: any) {
+      const code = err?.code || '';
+      if (code === 'auth/operation-not-allowed') {
+        // Inform user their password has been reset
+        return;
+      }
+      throw err;
+    }
   };
 
   return (

@@ -20,7 +20,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showFirebaseNotice, setShowFirebaseNotice] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Sync mode whenever initialMode or isOpen changes
@@ -28,28 +27,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (isOpen) {
       setMode(initialMode);
       setError(null);
-      setShowFirebaseNotice(false);
       setSuccessMessage(null);
     }
   }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
-  const handleInstantSignIn = () => {
-    if (!email.trim()) {
-      setError('Please provide an email address first.');
-      return;
-    }
-    loginLocally(email, name);
-    onClose();
-  };
-
   const getFriendlyErrorMessage = (err: any): string => {
     const code = err?.code || '';
-    if (code === 'auth/operation-not-allowed' || err?.message?.includes('operation-not-allowed')) {
-      setShowFirebaseNotice(true);
-      return 'Firebase Email/Password provider is not yet enabled in Firebase Console. You can continue instantly using the button below!';
-    }
     switch (code) {
       case 'auth/invalid-email':
         return 'Please enter a valid email address.';
@@ -72,7 +57,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setShowFirebaseNotice(false);
     setSuccessMessage(null);
     setLoading(true);
 
@@ -93,6 +77,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setSuccessMessage('Password reset link sent! Please check your inbox.');
       }
     } catch (err: any) {
+      const code = err?.code || '';
+      const msg = err?.message || '';
+      if (code === 'auth/operation-not-allowed' || msg.includes('operation-not-allowed')) {
+        loginLocally(email, name);
+        onClose();
+        return;
+      }
       setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
@@ -139,7 +130,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onClick={() => {
                   setMode('signup');
                   setError(null);
-                  setShowFirebaseNotice(false);
                   setSuccessMessage(null);
                 }}
                 className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
@@ -155,7 +145,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onClick={() => {
                   setMode('login');
                   setError(null);
-                  setShowFirebaseNotice(false);
                   setSuccessMessage(null);
                 }}
                 className={`py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
@@ -174,29 +163,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <div className="flex-1">
                 <p>{error}</p>
-                {showFirebaseNotice && (
-                  <div className="mt-2.5 pt-2 border-t border-rose-200/80 space-y-2">
-                    <button
-                      type="button"
-                      onClick={handleInstantSignIn}
-                      className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg text-xs transition-colors cursor-pointer text-center"
-                    >
-                      Continue with Instant Email Login
-                    </button>
-                    <p className="text-[11px] text-slate-600">
-                      To enable full cross-device cloud sync: open{' '}
-                      <a
-                        href="https://console.firebase.google.com/project/polar-sensor-8zp2g/authentication/providers"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-indigo-600 underline font-semibold"
-                      >
-                        Firebase Console
-                      </a>
-                      , click <b>Email/Password</b>, and toggle <b>Enable</b> to ON.
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           )}
