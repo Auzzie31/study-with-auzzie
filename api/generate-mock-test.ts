@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from '@google/genai';
+import { MOCK_QUESTIONS } from '../src/data/mockQuestions';
 
 const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
 
@@ -15,12 +16,30 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
-  try {
-    const { subjectId, chapterTitle, questionCount = 5 } = req.body || {};
+  const { subjectId, chapterTitle, questionCount = 5, subject, count } = req.body || {};
+  const targetSubject = subjectId || subject;
+  const targetCount = count || questionCount || 5;
 
+  const getFallbackQuestions = () => {
+    let pool = MOCK_QUESTIONS;
+    if (targetSubject && targetSubject !== 'all') {
+      pool = pool.filter((q) => q.subjectId === targetSubject);
+    }
+    const shuffled = [...pool].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, targetCount).map((q) => ({
+      id: q.id,
+      question: q.question,
+      options: q.options,
+      correctOptionIndex: q.correctIndex,
+      explanation: q.explanation,
+      difficulty: q.difficulty,
+    }));
+  };
+
+  try {
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(503).json({ error: 'GEMINI_API_KEY not configured on server' });
+      return res.status(200).json({ questions: getFallbackQuestions() });
     }
 
     const ai = new GoogleGenAI({
@@ -32,8 +51,8 @@ export default async function handler(req: any, res: any) {
       },
     });
 
-    const prompt = `Generate exactly ${questionCount} high-quality Class 9 STEM multiple choice questions (MCQs) for CBSE/NCERT curriculum (2026 Academic Edition).
-Subject: ${subjectId || 'Physics/Chemistry/Math'}
+    const prompt = `Generate exactly ${targetCount} high-quality Class 9 STEM multiple choice questions (MCQs) for CBSE/NCERT curriculum (2026 Academic Edition).
+Subject: ${targetSubject || 'Physics/Chemistry/Math'}
 ${chapterTitle ? `Focus Chapter: ${chapterTitle}` : 'Comprehensive mix'}
 
 Requirements:
@@ -72,7 +91,6 @@ Requirements:
     };
 
     let generatedText = '';
-    let lastError: any = null;
 
     for (const model of CANDIDATE_MODELS) {
       try {
@@ -91,18 +109,18 @@ Requirements:
           break;
         }
       } catch (err: any) {
-        lastError = err;
+        console.warn(`[Vercel mock-test] Model ${model} note:`, err?.message);
       }
     }
 
     if (!generatedText) {
-      throw lastError || new Error('Failed to generate mock test');
+      return res.status(200).json({ questions: getFallbackQuestions() });
     }
 
     const parsed = JSON.parse(generatedText);
     return res.status(200).json(parsed);
   } catch (error: any) {
     console.error('Error in /api/generate-mock-test:', error);
-    return res.status(500).json({ error: error.message || 'Failed to generate mock test' });
+    return res.status(200).json({ questions: getFallbackQuestions() });
   }
 }

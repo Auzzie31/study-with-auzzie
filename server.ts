@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
+import { solveDoubtOffline } from './src/utils/stemReasoner';
 
 dotenv.config();
 
@@ -92,7 +93,9 @@ ${topic ? `Current Topic: ${topic}.` : ''}`;
     res.json({ text: response.text });
   } catch (error: any) {
     console.error('Error in /api/chat after fallback attempts:', error);
-    res.status(500).json({ error: error.message || 'Failed to process doubt with AI' });
+    const lastMsg = req.body?.messages?.[req.body?.messages?.length - 1]?.content || 'Class 9 Doubt';
+    const fallbackText = solveDoubtOffline(lastMsg, req.body?.subject);
+    res.json({ text: fallbackText });
   }
 });
 

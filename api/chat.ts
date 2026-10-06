@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { solveDoubtOffline } from '../src/utils/stemReasoner';
 
 const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
 
@@ -16,17 +17,19 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
+  const { messages, subject, topic } = req.body || {};
+  const lastUserMsg = (messages && Array.isArray(messages) && messages[messages.length - 1]?.content) || 'Class 9 STEM Doubt';
+
   try {
-    const { messages, subject, topic } = req.body || {};
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Valid messages array is required' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
-      return res.status(503).json({ 
-        error: 'GEMINI_API_KEY is not configured on the server environment. Please set GEMINI_API_KEY.' 
-      });
+      // Answer via NCERT STEM engine so cross-device users get immediate answers without needing Vercel config!
+      const text = solveDoubtOffline(lastUserMsg, subject);
+      return res.status(200).json({ text });
     }
 
     const ai = new GoogleGenAI({
@@ -60,7 +63,6 @@ ${topic ? `Current Topic: ${topic}.` : ''}`;
       parts: [{ text: m.content }],
     }));
 
-    let lastError: any = null;
     let generatedText = '';
 
     for (const model of CANDIDATE_MODELS) {
@@ -79,17 +81,18 @@ ${topic ? `Current Topic: ${topic}.` : ''}`;
           break;
         }
       } catch (err: any) {
-        lastError = err;
+        console.warn(`[Vercel api/chat] Model ${model} note:`, err?.message);
       }
     }
 
     if (!generatedText) {
-      throw lastError || new Error('All AI models are currently busy or unavailable.');
+      generatedText = solveDoubtOffline(lastUserMsg, subject);
     }
 
     return res.status(200).json({ text: generatedText });
   } catch (error: any) {
     console.error('Error in /api/chat:', error);
-    return res.status(500).json({ error: error.message || 'Failed to process doubt with AI' });
+    const text = solveDoubtOffline(lastUserMsg, subject);
+    return res.status(200).json({ text });
   }
 }
