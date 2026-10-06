@@ -117,11 +117,15 @@ export function deleteStudySession(sessionId: string): StudySession[] {
 export function loadNotes(): StudyNote[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.NOTES);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: StudyNote[] = JSON.parse(raw);
+      // Keep only user-created notes so own notes starts at 0
+      return parsed.filter((n) => !n.id.startsWith('note-ncert-2026-'));
+    }
   } catch (e) {
     console.error('Failed to load notes', e);
   }
-  return INITIAL_NOTES;
+  return [];
 }
 
 export function saveNotes(notes: StudyNote[]): void {

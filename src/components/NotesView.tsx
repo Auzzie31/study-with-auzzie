@@ -75,6 +75,8 @@ export const NotesView: React.FC<NotesViewProps> = ({
     const pool = source === 'ready_made' ? READY_MADE_NOTES : notes;
     if (pool.length > 0) {
       handleSelectNote(pool[0]);
+    } else {
+      setActiveNoteId('');
     }
   };
 
@@ -620,8 +622,19 @@ export const NotesView: React.FC<NotesViewProps> = ({
               </div>
             </>
           ) : (
-            <div className="p-16 text-center text-slate-500">
-              <p className="text-sm">Select or create a study note to start revising.</p>
+            <div className="p-16 text-center text-slate-500 my-auto flex flex-col items-center justify-center">
+              <FileText className="w-12 h-12 text-slate-300 mb-3" />
+              <h3 className="text-sm font-bold text-slate-800">Your Own Notes (0 Created)</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm">
+                You haven't written any personal notes yet. Create your own note from scratch or save a copy from Ready-Made Notes to customize.
+              </p>
+              <button
+                onClick={handleCreateNewNote}
+                className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create First Note</span>
+              </button>
             </div>
           )}
         </div>

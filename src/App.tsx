@@ -9,6 +9,10 @@ import { MockTestView } from './components/MockTestView';
 import { ConsistencyCalendarView } from './components/ConsistencyCalendarView';
 import { FormulaSheetModal } from './components/FormulaSheetModal';
 import { AddTopicModal } from './components/AddTopicModal';
+import { AuthModal } from './components/AuthModal';
+import { AuthGate } from './components/AuthGate';
+import { useAuth } from './context/AuthContext';
+import { fetchUserCloudData, saveUserCloudData } from './utils/cloudSync';
 import { Chapter, StudyGoal, StudyNote, StudySession, SubjectId, Topic, TopicStatus } from './types';
 import { INITIAL_CHAPTERS } from './data/curriculum';
 import {
@@ -25,6 +29,7 @@ import {
 } from './utils/storage';
 
 export default function App() {
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [chapters, setChapters] = useState<Chapter[]>(() => loadCurriculum());
   const [sessions, setSessions] = useState<StudySession[]>(() => loadStudySessions());
@@ -46,6 +51,36 @@ export default function App() {
   const [addTopicSubject, setAddTopicSubject] = useState<SubjectId>('physics');
   const [syllabusSubjectFilter, setSyllabusSubjectFilter] = useState<SubjectId | undefined>(undefined);
   const [notesInitialTopicId, setNotesInitialTopicId] = useState<string | undefined>(undefined);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
+
+  const handleOpenAuth = (mode: 'login' | 'signup' = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
+  // Sync with Firestore when logged in
+  useEffect(() => {
+    if (!user) return;
+    fetchUserCloudData(user.uid).then((cloudData) => {
+      if (cloudData) {
+        if (cloudData.chapters && cloudData.chapters.length > 0) {
+          setChapters(cloudData.chapters);
+          saveCurriculum(cloudData.chapters);
+        }
+        if (cloudData.notes && cloudData.notes.length > 0) {
+          setNotes(cloudData.notes);
+          saveNotes(cloudData.notes);
+        }
+        if (cloudData.sessions && cloudData.sessions.length > 0) {
+          setSessions(cloudData.sessions);
+        }
+      } else {
+        // First time cloud sync for existing local data
+        saveUserCloudData(user.uid, { chapters, notes, sessions });
+      }
+    });
+  }, [user]);
 
   // Sync state to local storage when changed
   const handleUpdateTopicStatus = (topicId: string, status: TopicStatus) => {
@@ -147,6 +182,23 @@ export default function App() {
     setActiveTimerTopic(INITIAL_CHAPTERS[0]?.topics[0] || null);
   };
 
+  // 1. Loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-semibold text-slate-600">Loading Study with Auzzie...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Compulsory Authentication Gate: Users must sign in to use the facilities
+  if (!user) {
+    return <AuthGate />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       {/* 3-Zone Navigation Header */}
@@ -155,6 +207,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenFormulas={() => setIsFormulaModalOpen(true)}
         onResetAllToZero={handleResetAll}
+        onOpenAuth={handleOpenAuth}
         activeTimerRunning={isTimerRunning}
         timerSecondsRemaining={timerSecondsRemaining}
       />
@@ -255,6 +308,14 @@ export default function App() {
         onClose={() => setIsFormulaModalOpen(false)}
       />
 
+      {/* Auth Modal for Email Sign Up / Log In */}
+      <AuthModal
+        key={`${authModalMode}-${isAuthModalOpen}`}
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
+      />
+
       {/* Custom Topic / Chapter Creation Modal */}
       <AddTopicModal
         isOpen={isAddTopicModalOpen}
@@ -286,7 +347,7 @@ export default function App() {
               Consistency Matrix
             </button>
             <span aria-hidden="true">·</span>
-            <span>Local Storage Active</span>
+            <span>{user ? 'Cloud Synced Active' : 'Local Storage Active'}</span>
           </div>
         </div>
       </footer>

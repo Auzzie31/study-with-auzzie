@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile containing authenticated student credentials and metadata",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the student"
+        },
+        "email": {
+          "type": "string",
+          "description": "Student email address"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Student display name"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of account registration"
+        }
+      },
+      "required": ["userId", "email", "createdAt"]
+    },
+    "UserStudyState": {
+      "title": "UserStudyState",
+      "description": "Synchronized study progress and user preferences",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID"
+        },
+        "completedSubtopics": {
+          "type": "string",
+          "description": "JSON encoded subtopics completion list"
+        },
+        "notes": {
+          "type": "string",
+          "description": "JSON encoded student notes list"
+        },
+        "doubts": {
+          "type": "string",
+          "description": "JSON encoded student doubts list"
+        },
+        "tests": {
+          "type": "string",
+          "description": "JSON encoded mock test results"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last cloud sync"
+        }
+      },
+      "required": ["userId", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/profile/info": {
+      "schema": "UserProfile",
+      "description": "Private profile information for the user"
+    },
+    "/users/{userId}/studyData/{docId}": {
+      "schema": "UserStudyState",
+      "description": "Student study data accessible only by the owner"
+    }
+  }
+}
